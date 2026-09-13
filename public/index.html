@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캐시밀 cash meal</title>
+<style>
+@font-face { font-family:'Pretendard'; src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2'); font-weight:400; }
+@font-face { font-family:'Pretendard'; src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Medium.woff2') format('woff2'); font-weight:500; }
+@font-face { font-family:'Pretendard'; src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-SemiBold.woff2') format('woff2'); font-weight:600; }
+@font-face { font-family:'Pretendard'; src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Bold.woff2') format('woff2'); font-weight:700; }
+
+:root{
+  --bg:#ffffff; --surface:#F3F9EC; --surface-2:#EAF3E0; --line:#E1EAD6;
+  --green:#256D3B; --green-deep:#123C22; --lime:#E4F711; --lime-ink:#3A4200;
+  --text:#16241A; --muted:#6E7C6E; --danger:#C5462E; --lock:#B9C4AF;
+  --radius-lg:22px; --radius-md:14px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; background:#EFF4EA; color:var(--text); display:flex; justify-content:center; min-height:100vh; padding:28px 12px;}
+
+.device{width:400px; max-width:100%; background:var(--bg); border-radius:34px; box-shadow:0 30px 60px rgba(18,60,34,0.18),0 0 0 8px #0F2C1A; overflow:hidden; display:flex; flex-direction:column; height:844px; position:relative;}
+
+.topbar{padding:18px 20px 12px; background:var(--bg); border-bottom:1px solid var(--line); flex-shrink:0;}
+.brandrow{display:flex; align-items:center; justify-content:space-between;}
+.brand{display:flex; align-items:center; gap:8px; font-weight:700; font-size:18px; letter-spacing:-0.02em; color:var(--green-deep);}
+.brand .mark{width:24px;height:24px;border-radius:7px; background:var(--green); color:var(--lime); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;}
+.stats{display:flex; gap:6px;}
+.chip{display:flex; align-items:center; gap:4px; background:var(--surface); border:1px solid var(--line); padding:5px 9px; border-radius:100px; font-size:12px; font-weight:600; color:var(--green-deep);}
+.chip.point{background:var(--lime); color:var(--lime-ink); border-color:transparent;}
+
+.screen{flex:1; overflow-y:auto; padding:16px 20px 100px; background:var(--bg);}
+.screen::-webkit-scrollbar{width:0;}
+.view{display:none;} .view.active{display:block;}
+
+.section-title{font-size:15px; font-weight:700; color:var(--green-deep); margin:20px 0 10px;}
+.section-title:first-child{margin-top:2px;}
+.sub{font-size:12px; color:var(--muted); margin:-6px 0 12px; line-height:1.5;}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px; margin-bottom:14px;}
+.card.tight{padding:12px 16px;}
+
+/* 프로필 카드 */
+.profile-card{display:flex; justify-content:space-between; align-items:center; cursor:pointer;}
+.profile-name{font-size:16px; font-weight:700;}
+.profile-meta{font-size:12px; color:var(--muted); margin-top:3px;}
+.profile-kcal{font-size:12.5px; font-weight:700; color:var(--green); margin-top:6px;}
+.profile-edit{font-size:11.5px; color:var(--muted);}
+
+.attend-line{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; margin:10px 2px 4px; color:var(--green-deep);}
+.attend-line .dot{width:8px;height:8px;border-radius:50%; background:var(--lime);}
+
+/* 미션 카드 */
+.mission-row{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line);}
+.mission-row:last-child{border-bottom:none;}
+.mission-emoji{font-size:19px; width:26px; text-align:center;}
+.mission-body{flex:1;} .mission-name{font-size:13.5px; font-weight:600;} .mission-sub{font-size:11px; color:var(--muted); margin-top:1px;}
+.mission-pt{font-size:12px; font-weight:700; color:var(--green);}
+.mission-row.done .mission-name{color:var(--muted); text-decoration:line-through;} .mission-row.done .mission-pt{color:var(--muted);}
+.check{width:21px;height:21px;border-radius:50%; border:2px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; background:var(--bg);}
+.check.on{background:var(--green); border-color:var(--green);}
+
+/* 완성미션 */
+.final-card{background:linear-gradient(155deg,var(--green-deep) 0%,var(--green) 100%); color:#fff; border-radius:var(--radius-lg); padding:18px; margin-bottom:14px;}
+.final-top{display:flex; justify-content:space-between; align-items:flex-start;}
+.final-title{font-size:14.5px; font-weight:700;} .final-desc{font-size:11.5px; color:rgba(255,255,255,0.7); margin-top:3px; max-width:210px; line-height:1.5;}
+.final-pt{background:var(--lime); color:var(--lime-ink); font-weight:700; font-size:12px; padding:4px 9px; border-radius:100px; white-space:nowrap;}
+.group-line{display:flex; align-items:center; gap:9px; font-size:12.5px; margin-top:10px;}
+.group-line .g-icon{width:20px; text-align:center;} .group-line .g-name{width:66px; color:rgba(255,255,255,0.85);}
+.group-line .g-bar{flex:1; height:6px; background:rgba(255,255,255,0.22); border-radius:100px; overflow:hidden;}
+.group-line .g-bar span{display:block; height:100%; background:var(--lime);}
+.group-line .g-val{width:52px; text-align:right; font-weight:600;} .group-line.ok .g-val{color:var(--lime);}
+.final-pct{font-size:22px; font-weight:700; margin-top:8px;}
+.note-box{margin-top:12px; background:rgba(255,255,255,0.1); border-radius:10px; padding:9px 11px; font-size:11px; color:rgba(255,255,255,0.8); line-height:1.5;}
+.final-btn{margin-top:12px; width:100%; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:9px; border-radius:12px; font-size:12.5px; font-weight:600; cursor:pointer;}
+
+/* 5일 챌린지 */
+.challenge-dots{display:flex; gap:7px; margin:10px 0;}
+.cdot{width:16px;height:16px;border-radius:50%; background:var(--surface-2); border:2px solid var(--line);}
+.cdot.on{background:var(--green); border-color:var(--green);}
+
+/* 레벨 진행 */
+.level-track{display:flex; align-items:center; gap:4px; margin:10px 0 14px;}
+.level-node{flex:1; display:flex; align-items:center; gap:4px;}
+.level-badge{width:26px;height:26px;border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;}
+.level-badge.done{background:var(--green); color:#fff;} .level-badge.current{background:var(--lime); color:var(--lime-ink);} .level-badge.locked{background:var(--surface-2); color:var(--lock);}
+.level-line{flex:1; height:2px; background:var(--line);}
+.exp-bar{background:var(--surface-2); height:8px; border-radius:100px; overflow:hidden; margin-top:8px;}
+.exp-bar span{display:block; height:100%; background:var(--green);}
+.lock-msg{font-size:11.5px; color:var(--muted); margin-top:6px; background:var(--surface); padding:8px 10px; border-radius:8px;}
+
+/* 식사기록 */
+.meal-block{border:1px solid var(--line); border-radius:var(--radius-md); padding:13px 15px; margin-bottom:10px;}
+.meal-head{display:flex; justify-content:space-between; align-items:center;}
+.meal-name{font-size:13.5px; font-weight:700;}
+.addbtn{border:1px dashed var(--green); color:var(--green); background:transparent; font-size:12px; font-weight:600; padding:6px 11px; border-radius:100px; cursor:pointer;}
+.food-item{display:flex; justify-content:space-between; align-items:center; margin-top:9px; padding-top:9px; border-top:1px solid var(--line); font-size:12.5px;}
+.food-item .fname{font-weight:600;} .food-item .fmeta{font-size:10.5px; color:var(--muted); margin-top:2px;}
+.camera-btn{width:100%; background:var(--green-deep); color:#fff; border:none; padding:15px; border-radius:16px; font-size:14.5px; font-weight:700; cursor:pointer; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:8px;}
+
+.badge{display:inline-block; font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:100px; margin-left:5px; vertical-align:middle;}
+.badge.official{background:#DCF0DE; color:var(--green);} .badge.review{background:#FBE1DC; color:var(--danger);} .badge.mock{background:#FDF0D5; color:#9A6B00;}
+
+/* 쇼핑 */
+.shop-card{display:flex; gap:12px; border:1px solid var(--line); border-radius:var(--radius-md); padding:12px; margin-bottom:10px;}
+.shop-thumb{width:56px;height:56px;border-radius:10px; background:var(--surface-2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:22px;}
+.shop-body{flex:1;} .shop-name{font-size:13.5px; font-weight:700;} .shop-meta{font-size:11px; color:var(--muted); margin-top:2px;}
+.shop-price{font-size:12.5px; font-weight:700; color:var(--green); margin-top:6px;}
+.buybtn{border:none; background:var(--lime); color:var(--lime-ink); font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:100px; cursor:pointer; margin-top:6px;}
+.buybtn:disabled{background:var(--surface-2); color:var(--lock); cursor:not-allowed;}
+
+/* 리포트 */
+.weekwrap{display:flex; gap:7px; align-items:flex-end; height:110px; margin:14px 0 4px;}
+.daybar{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;}
+.daybar .col{width:100%; background:var(--surface-2); border-radius:8px 8px 4px 4px; height:82px; display:flex; align-items:flex-end; overflow:hidden;}
+.daybar .col .fill{width:100%; background:var(--green); border-radius:8px 8px 0 0;}
+.daybar .lbl{font-size:10.5px; color:var(--muted); font-weight:600;}
+.rep-row{display:flex; justify-content:space-between; font-size:12.5px; padding:8px 0; border-bottom:1px solid var(--line);}
+.rep-row:last-child{border-bottom:none;}
+
+.tabbar{position:absolute; left:0; right:0; bottom:0; background:var(--bg); border-top:1px solid var(--line); display:flex; padding:9px 4px 15px;}
+.tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; cursor:pointer; color:var(--muted); font-size:10px; font-weight:600; padding:3px 0;}
+.tab .ic{font-size:18px;} .tab.active{color:var(--green);}
+
+/* 온보딩 */
+.onboard{padding:34px 24px; height:100%; overflow-y:auto;}
+.onboard h1{font-size:21px; font-weight:700; color:var(--green-deep); margin-bottom:4px;}
+.onboard p.lead{font-size:12.5px; color:var(--muted); margin-bottom:22px; line-height:1.5;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12.5px; font-weight:600; color:var(--green-deep); margin-bottom:6px;}
+.field input, .field select{width:100%; border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:11px 13px; font-size:14px; font-family:inherit; outline:none;}
+.seg{display:flex; gap:7px;}
+.seg button{flex:1; border:1px solid var(--line); background:var(--surface); padding:10px 4px; border-radius:12px; font-size:12px; font-weight:600; cursor:pointer;}
+.seg button.sel{background:var(--green); color:#fff; border-color:var(--green);}
+.onboard-submit{width:100%; background:var(--lime); color:var(--lime-ink); border:none; padding:14px; border-radius:14px; font-weight:700; font-size:14.5px; cursor:pointer; margin-top:8px;}
+
+/* 모달 */
+.modal-back{position:absolute; inset:0; background:rgba(15,44,26,0.45); display:none; align-items:flex-end; z-index:20;}
+.modal-back.open{display:flex;}
+.modal{background:var(--bg); width:100%; max-height:88%; border-radius:24px 24px 0 0; padding:18px 20px 24px; overflow-y:auto;}
+.modal-title{font-size:15.5px; font-weight:700; margin-bottom:2px;} .modal-sub{font-size:11.5px; color:var(--muted); margin-bottom:12px;}
+.searchbox{display:flex; gap:8px; margin-bottom:10px;}
+.searchbox input{flex:1; border:1px solid var(--line); border-radius:100px; padding:10px 15px; font-size:13.5px; font-family:inherit; outline:none; background:var(--surface);}
+.searchbox button{border:none; background:var(--green); color:#fff; padding:0 15px; border-radius:100px; font-weight:600; font-size:12.5px; cursor:pointer;}
+.result-item{display:flex; justify-content:space-between; align-items:center; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer;}
+.result-item .rname{font-weight:600; font-size:13.5px;} .result-item .rcode{font-size:10.5px; color:var(--muted);} .result-item .rarrow{color:var(--muted);}
+.ing-row{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:12px;}
+.ing-row .iname{font-weight:600;} .ing-row .irole{font-size:10px; color:var(--muted);} .ing-row .iserv{font-weight:700; color:var(--green);}
+.ratio-row{display:flex; gap:8px; margin:12px 0; flex-wrap:wrap;}
+.ratio-opt{border:1px solid var(--line); background:var(--surface); padding:8px 13px; border-radius:100px; font-size:12px; font-weight:600; cursor:pointer;}
+.ratio-opt.sel{background:var(--green); color:#fff; border-color:var(--green);}
+.confirmbtn{width:100%; background:var(--lime); color:var(--lime-ink); border:none; padding:13px; border-radius:14px; font-weight:700; font-size:13.5px; cursor:pointer; margin-top:6px;}
+.closebtn{width:100%; background:transparent; color:var(--muted); border:none; padding:10px; font-size:12.5px; cursor:pointer;}
+.status-line{font-size:10.5px; color:var(--muted); margin:6px 0 12px; padding:8px 10px; background:var(--surface); border-radius:8px;}
+.mealtype-row{display:flex; gap:7px; margin-bottom:12px;}
+.mealtype-row button{flex:1; border:1px solid var(--line); background:var(--surface); padding:8px 4px; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer;}
+.mealtype-row button.sel{background:var(--green); color:#fff; border-color:var(--green);}
+
+.toast{position:absolute; top:16px; left:50%; transform:translateX(-50%); background:var(--green-deep); color:#fff; padding:10px 18px; border-radius:100px; font-size:12.5px; font-weight:600; z-index:30; opacity:0; pointer-events:none; transition:opacity .25s ease, top .25s ease; max-width:80%; text-align:center;}
+.toast.show{opacity:1; top:24px;}
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="toast" id="toast"></div>
+
+  <!-- 온보딩 -->
+  <div id="onboardScreen" class="onboard" style="display:none;">
+    <h1>캐시밀에 오신 걸 환영해요</h1>
+    <p class="lead">몇 가지만 알려주시면 2025 한국인 영양소 섭취기준(KDRI)에 맞는 나만의 식사구성 목표를 만들어드려요.</p>
+
+    <div class="field"><label>이름</label><input id="ob_name" placeholder="예: 세은"></div>
+    <div class="field"><label>성별</label>
+      <div class="seg" id="ob_sex"><button data-v="male">남성</button><button data-v="female">여성</button></div>
+    </div>
+    <div class="field"><label>나이(만)</label><input id="ob_age" type="number" placeholder="예: 22"></div>
+    <div class="field"><label>키(cm)</label><input id="ob_height" type="number" placeholder="예: 162"></div>
+    <div class="field"><label>체중(kg)</label><input id="ob_weight" type="number" placeholder="예: 54"></div>
+    <div class="field"><label>신체활동 수준</label>
+      <div class="seg" id="ob_activity"><button data-v="low">저활동</button><button data-v="active">활동적</button><button data-v="veryactive">매우 활동적</button></div>
+    </div>
+    <button class="onboard-submit" id="ob_submit">시작하기</button>
+  </div>
+
+  <div id="mainApp" style="display:none; height:100%; display:flex; flex-direction:column;">
+    <div class="topbar">
+      <div class="brandrow">
+        <div class="brand"><span class="mark">₩</span>캐시밀</div>
+        <div class="stats">
+          <div class="chip">🔥 <span id="mealStreakNum">0</span>일</div>
+          <div class="chip point">⭐ <span id="pointNum">0</span>P</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 홈 -->
+    <div class="screen view active" id="view-home">
+      <div class="card profile-card" id="profileCard">
+        <div>
+          <div class="profile-name" id="p_name">-</div>
+          <div class="profile-meta" id="p_meta">-</div>
+          <div class="profile-kcal" id="p_kcal">-</div>
+        </div>
+        <div class="profile-edit">프로필 수정 ›</div>
+      </div>
+      <div class="attend-line" id="attendLine"><span class="dot"></span>오늘 출석 완료 +3P</div>
+
+      <div class="section-title">🎯 오늘의 미션 <span id="homeLevelTag" style="font-size:11px; color:var(--muted); font-weight:600;"></span></div>
+      <div class="card tight" id="dailyMissionCard"></div>
+      <div class="sub" id="dailyMissionProgress"></div>
+
+      <div class="section-title">🏆 오늘의 완성 미션</div>
+      <div class="final-card">
+        <div class="final-top">
+          <div>
+            <div class="final-title">오늘의 권장 식사구성 완성</div>
+            <div class="final-desc" id="finalPatternLabel">5개 핵심 식품군을 모두 목표치 이상 채우면 완성이에요</div>
+          </div>
+          <div class="final-pt">+100P</div>
+        </div>
+        <div class="final-pct" id="finalPct">0%</div>
+        <div id="groupDetailHome"></div>
+        <button class="final-btn" id="toggleDetail">자세히 보기</button>
+        <div class="note-box">현재 기록 기준으로 계산돼요. 아직 기록하지 않은 식사가 있다면 결과가 달라질 수 있어요.</div>
+      </div>
+
+      <div class="section-title">🔥 5일 균형 식사 챌린지</div>
+      <div class="card">
+        <div class="challenge-dots" id="challengeDots"></div>
+        <div class="sub" id="challengeText" style="margin:0;"></div>
+      </div>
+
+      <div class="section-title">🍽️ 오늘의 식사</div>
+      <div id="homeMealMini"></div>
+
+      <button class="camera-btn" id="cameraBtnHome">📷 사진으로 식사 기록하기</button>
+    </div>
+
+    <!-- 미션 -->
+    <div class="screen view" id="view-mission">
+      <div class="section-title">현재 레벨</div>
+      <div class="card">
+        <div id="levelTitle" style="font-size:15px; font-weight:700; color:var(--green-deep);"></div>
+        <div class="level-track" id="levelTrack"></div>
+        <div class="sub" style="margin:0 0 4px;" id="expLabel"></div>
+        <div class="exp-bar"><span id="expBar" style="width:0%"></span></div>
+        <div class="lock-msg" id="lockMsg" style="display:none;"></div>
+      </div>
+
+      <div class="section-title">🎯 오늘의 미션</div>
+      <div class="card tight" id="dailyMissionCard2"></div>
+
+      <div class="section-title">🏆 오늘의 완성 미션</div>
+      <div class="card tight" id="finalMiniCard"></div>
+
+      <div class="section-title">🔥 5일 균형 식사 챌린지</div>
+      <div class="card tight" id="challengeMiniCard"></div>
+    </div>
+
+    <!-- 기록 -->
+    <div class="screen view" id="view-record">
+      <button class="camera-btn" id="cameraBtnRecord" style="margin-bottom:16px;">📷 사진으로 식사 기록하기</button>
+      <div class="section-title">오늘의 식사 기록</div>
+      <div id="mealBlocks"></div>
+    </div>
+
+    <!-- 쇼핑 -->
+    <div class="screen view" id="view-shop">
+      <div class="section-title">🛒 포인트로 지역 특산물 만나보기</div>
+      <div class="sub">아래 상품은 프로토타입 예시 상품이에요. 실제 판매 연동 전 단계로, 구매는 시뮬레이션으로만 처리돼요.</div>
+      <div id="shopList"></div>
+    </div>
+
+    <!-- 리포트 -->
+    <div class="screen view" id="view-report">
+      <div class="section-title">이번 주 기록 현황</div>
+      <div class="sub">기록하지 않은 날은 0 섭취가 아니라 데이터 없음으로 처리되어 평균 계산에서 제외돼요.</div>
+      <div class="card">
+        <div class="weekwrap" id="weekChart"></div>
+        <div class="sub" style="margin:8px 0 0;" id="weekAvgLine"></div>
+      </div>
+
+      <div class="section-title">식품군별 주간 평균 (기록된 날 기준)</div>
+      <div class="card tight" id="groupAvgTable"></div>
+
+      <div class="section-title">영양소 섭취량</div>
+      <div class="card tight sub" style="margin:0;">실제 RDA 영양정보 API가 연동되지 않아 임의 수치를 만들지 않아요. 백엔드 연동 후 표시될 예정이에요.</div>
+
+      <div class="section-title">기록 스트릭 안내</div>
+      <div class="card tight sub" style="margin:0;">식사 기록 연속일과 출석 연속 여부는 서로 다른 시스템이에요. 출석은 앱 방문만으로, 식사 기록 스트릭은 실제 식사 기록이 있는 날만 인정돼요.</div>
+    </div>
+
+    <div class="tabbar">
+      <button class="tab active" data-view="home"><span class="ic">🏠</span>홈</button>
+      <button class="tab" data-view="mission"><span class="ic">🎯</span>미션</button>
+      <button class="tab" data-view="record"><span class="ic">🍽️</span>기록</button>
+      <button class="tab" data-view="shop"><span class="ic">🛒</span>쇼핑</button>
+      <button class="tab" data-view="report"><span class="ic">📊</span>리포트</button>
+    </div>
+  </div>
+
+  <!-- 식사 기록 모달 -->
+  <div class="modal-back" id="modalBack">
+    <div class="modal">
+      <div id="modalStep1">
+        <div class="modal-title">음식 기록</div>
+        <div class="modal-sub">어떤 식사인가요?</div>
+        <div class="mealtype-row" id="mealtypeRow">
+          <button data-t="breakfast" class="sel">아침</button>
+          <button data-t="lunch">점심</button>
+          <button data-t="dinner">저녁</button>
+          <button data-t="snack">간식</button>
+        </div>
+        <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none;">
+        <button class="addbtn" id="cameraTrigger" style="width:100%; margin-bottom:10px;">📷 사진 촬영해서 AI 추정받기 (프로토타입)</button>
+        <div class="searchbox">
+          <input id="searchInput" placeholder="예: 김치찌개, 사과, 우유, 흰쌀밥">
+          <button id="searchBtn">검색</button>
+        </div>
+        <div class="status-line" id="apiStatus">우리 서버(/api/foods)를 통해 실제 RDA 공공데이터를 검색해요. 서버나 API에 문제가 있으면 그 사실을 그대로 알려드려요.</div>
+        <div id="searchResults"></div>
+        <button class="closebtn" id="closeModal1">닫기</button>
+      </div>
+
+      <div id="modalStep2" style="display:none;">
+        <div class="modal-title" id="foodTitle">음식 이름</div>
+        <div class="modal-sub">실제 재료와 영양정보를 불러와서 보여드려요.</div>
+        <div id="ingTable"></div>
+        <div class="section-title" style="margin-top:14px;">얼마나 드셨나요?</div>
+        <div class="ratio-row" id="ratioRow"></div>
+        <button class="confirmbtn" id="confirmAdd">이 식사 저장하기</button>
+        <button class="closebtn" id="backToSearch">다시 검색하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   0. API 연동 구조 안내
+   프론트엔드는 RDA API를 직접 호출하지 않는다. 대신 Node.js/Express
+   서버(server.js)의 /api/foods, /api/foods/:code 를 호출하고,
+   서버가 RDA serviceKey를 붙여 실제 공공데이터 API를 호출한 뒤
+   XML을 JSON으로 변환해 돌려준다. serviceKey는 .env에만 존재하며
+   이 파일(프론트엔드)에는 어떤 형태로도 포함되어 있지 않다.
+   서버 호출이 실패하면 searchFood/getIngredients가 자동으로
+   데모 데이터로 폴백해 화면이 깨지지 않도록 한다.
+   ========================================================= */
+
+/* =========================================================
+   1. 상수 및 기준 데이터
+   ========================================================= */
+const CORE_GROUPS = ["곡류","고기·생선·달걀·콩류","채소류","과일류","우유·유제품류"];
+const GROUP_ICON = {"곡류":"🍚","고기·생선·달걀·콩류":"🥩","채소류":"🥬","과일류":"🍎","우유·유제품류":"🥛"};
+
+// 2020 활용연구 B형 식사구성안 (2025 KDRI 식사구성안 확정 전 운영 프레임, meal_composition_version 참고)
+const MEAL_PATTERNS = {
+  "1500": {"곡류":2.5,"고기·생선·달걀·콩류":2.5,"채소류":6,"과일류":1,"우유·유제품류":1,"유지·당류":4},
+  "1600": {"곡류":3,  "고기·생선·달걀·콩류":2.5,"채소류":6,"과일류":1,"우유·유제품류":1,"유지·당류":4},
+  "1700": {"곡류":3,  "고기·생선·달걀·콩류":3.5,"채소류":6,"과일류":1,"우유·유제품류":1,"유지·당류":4},
+  "1800": {"곡류":3,  "고기·생선·달걀·콩류":3.5,"채소류":7,"과일류":2,"우유·유제품류":1,"유지·당류":4},
+  "1900": {"곡류":3,  "고기·생선·달걀·콩류":4,  "채소류":8,"과일류":2,"우유·유제품류":1,"유지·당류":4},
+  "2000": {"곡류":3.5,"고기·생선·달걀·콩류":4,  "채소류":8,"과일류":2,"우유·유제품류":1,"유지·당류":4},
+  "2100": {"곡류":3.5,"고기·생선·달걀·콩류":4.5,"채소류":8,"과일류":2,"우유·유제품류":1,"유지·당류":5},
+  "2200": {"곡류":3.5,"고기·생선·달걀·콩류":5,  "채소류":8,"과일류":2,"우유·유제품류":1,"유지·당류":6},
+  "2300": {"곡류":4,  "고기·생선·달걀·콩류":5,  "채소류":8,"과일류":2,"우유·유제품류":1,"유지·당류":6},
+  "2400": {"곡류":4,  "고기·생선·달걀·콩류":5,  "채소류":8,"과일류":3,"우유·유제품류":1,"유지·당류":6},
+  "2500": {"곡류":4,  "고기·생선·달걀·콩류":5,  "채소류":8,"과일류":4,"우유·유제품류":1,"유지·당류":7},
+  "2600": {"곡류":4,  "고기·생선·달걀·콩류":6,  "채소류":9,"과일류":4,"우유·유제품류":1,"유지·당류":7},
+  "2700": {"곡류":4,  "고기·생선·달걀·콩류":6.5,"채소류":9,"과일류":4,"우유·유제품류":1,"유지·당류":8},
+  // 2800B는 2020 활용연구 수정본에서 삭제되어 존재하지 않음 (임의 생성 금지)
+};
+const PATTERN_KEYS = Object.keys(MEAL_PATTERNS).map(Number).sort((a,b)=>a-b);
+
+// 2025 KDRI 공식 최종 에너지 설정값 (성인, 19-64세)
+const OFFICIAL_EER_TABLE = {
+  male:   { "19-29":[2600,2900,3400], "30-49":[2500,2800,3200], "50-64":[2200,2500,2900] },
+  female: { "19-29":[2000,2300,2600], "30-49":[1900,2200,2500], "50-64":[1700,2000,2300] }
+};
+const PA_TABLE = {
+  male:   { low:1.11, active:1.25, veryactive:1.48 },
+  female: { low:1.12, active:1.27, veryactive:1.45 }
+};
+const ACTIVITY_LABEL = {low:"저활동", active:"활동적", veryactive:"매우 활동적"};
+const ACTIVITY_IDX = {low:0, active:1, veryactive:2};
+
+function ageBand(age){
+  if(age>=19 && age<=29) return "19-29";
+  if(age>=30 && age<=49) return "30-49";
+  if(age>=50 && age<=64) return "50-64";
+  return null;
+}
+function getOfficialKcal(sex, age, activity){
+  const band = ageBand(age);
+  if(!band) return null; // 공식 최종값 표에 없는 연령대 -> 자료 확인 필요
+  return OFFICIAL_EER_TABLE[sex][band][ACTIVITY_IDX[activity]];
+}
+function calcIndividualEER(sex, age, heightCm, weightKg, activity){
+  const h = heightCm/100;
+  const pa = PA_TABLE[sex][activity];
+  if(sex==="male") return 662.00 + (-9.53*age) + pa*(15.91*weightKg + 539.60*h);
+  return 354.00 + (-6.91*age) + pa*(9.36*weightKg + 726.00*h);
+}
+function nearestPatternKey(kcal){
+  let best = PATTERN_KEYS[0];
+  let bestDiff = Math.abs(kcal-best);
+  PATTERN_KEYS.forEach(k=>{
+    const d = Math.abs(kcal-k);
+    if(d < bestDiff){ best=k; bestDiff=d; }
+  });
+  return String(best);
+}
+
+/* =========================================================
+   2. 목업 DB (데모 데이터 - 실제 RDA API 연동 전까지 사용)
+   ========================================================= */
+const STANDARD_FOOD = [
+  {id:"SF01", group:"곡류", name:"쌀밥", ref_w:210, ref_serv:1, source:"official"},
+  {id:"SF02", group:"고기·생선·달걀·콩류", name:"쇠고기", ref_w:60, ref_serv:1, source:"official"},
+  {id:"SF03", group:"고기·생선·달걀·콩류", name:"두부", ref_w:80, ref_serv:1, source:"official"},
+  {id:"SF04", group:"고기·생선·달걀·콩류", name:"달걀", ref_w:60, ref_serv:1, source:"official"},
+  {id:"SF05", group:"고기·생선·달걀·콩류", name:"닭고기", ref_w:60, ref_serv:1, source:"official"},
+  {id:"SF06", group:"채소류", name:"배추김치", ref_w:40, ref_serv:1, source:"official"},
+  {id:"SF07", group:"과일류", name:"사과", ref_w:100, ref_serv:1, source:"official"},
+  {id:"SF08", group:"과일류", name:"귤", ref_w:100, ref_serv:1, source:"official"},
+  {id:"SF09", group:"우유·유제품류", name:"우유", ref_w:200, ref_serv:1, source:"official"},
+  {id:"SF10", group:"우유·유제품류", name:"호상요구르트", ref_w:100, ref_serv:1, source:"official"},
+  {id:"SF11", group:"채소류", name:"시금치", ref_w:70, ref_serv:1, source:"official"},
+  {id:"SF12", group:"유지·당류", name:"콩기름", ref_w:5, ref_serv:1, source:"official"},
+  // 아래 두 개는 "특정 식품 전용 공식 기준값"이 아니라, 같은 식품군 안의 여러 공식 대표식품들이
+  // 공통적으로 쓰는 1회 분량을 정책적으로 적용한 값이다 (예: 육류군 대표식품은 대부분 60~70g,
+  // 채소군 대표식품은 대부분 70g). 특정 재료의 전용 공식 자료가 없을 때만 이 기본값을 쓴다.
+  {id:"SF_DEFAULT_MEAT", group:"고기·생선·달걀·콩류", name:"(육류군 표준 1회 분량)", ref_w:60, ref_serv:1, source:"policy_default"},
+  {id:"SF_DEFAULT_VEG",  group:"채소류", name:"(채소군 표준 1회 분량)", ref_w:70, ref_serv:1, source:"policy_default"},
+  // 아래부터는 원래 기획서 [24]항에 명시된 2020 활용연구 대표식품/1회 분량을 그대로 반영한 것
+  {id:"SF13", group:"곡류", name:"백미(생쌀)", ref_w:90, ref_serv:1, source:"official"},
+  {id:"SF14", group:"곡류", name:"국수(마른/냉면)", ref_w:90, ref_serv:1, source:"official"},
+  {id:"SF15", group:"곡류", name:"가래떡", ref_w:150, ref_serv:1, source:"official"},
+  {id:"SF16", group:"곡류", name:"빵", ref_w:35, ref_serv:0.3, source:"official"},
+  {id:"SF17", group:"고기·생선·달걀·콩류", name:"고등어", ref_w:70, ref_serv:1, source:"official"},
+  {id:"SF18", group:"고기·생선·달걀·콩류", name:"대두", ref_w:20, ref_serv:1, source:"official"},
+  {id:"SF19", group:"채소류", name:"콩나물", ref_w:70, ref_serv:1, source:"official"},
+  {id:"SF20", group:"채소류", name:"오이소박이", ref_w:40, ref_serv:1, source:"official"},
+  {id:"SF21", group:"채소류", name:"느타리버섯", ref_w:30, ref_serv:1, source:"official"},
+  {id:"SF22", group:"채소류", name:"미역", ref_w:10, ref_serv:1, source:"official"},
+  {id:"SF23", group:"과일류", name:"참외", ref_w:150, ref_serv:1, source:"official"},
+  {id:"SF24", group:"과일류", name:"포도", ref_w:100, ref_serv:1, source:"official"},
+  {id:"SF25", group:"과일류", name:"수박", ref_w:150, ref_serv:1, source:"official"},
+  {id:"SF26", group:"과일류", name:"대추", ref_w:15, ref_serv:1, source:"official"},
+  {id:"SF27", group:"우유·유제품류", name:"치즈", ref_w:20, ref_serv:0.5, source:"official"},
+  {id:"SF28", group:"우유·유제품류", name:"액상요구르트", ref_w:150, ref_serv:1, source:"official"},
+  {id:"SF29", group:"우유·유제품류", name:"셔벗", ref_w:100, ref_serv:1, source:"official"},
+  {id:"SF30", group:"유지·당류", name:"버터", ref_w:5, ref_serv:1, source:"official"},
+  {id:"SF31", group:"유지·당류", name:"참깨", ref_w:5, ref_serv:1, source:"official"},
+  {id:"SF32", group:"유지·당류", name:"커피믹스", ref_w:12, ref_serv:1, source:"official"},
+  {id:"SF33", group:"유지·당류", name:"설탕", ref_w:10, ref_serv:1, source:"official"},
+  {id:"SF34", group:"유지·당류", name:"꿀", ref_w:10, ref_serv:1, source:"official"},
+];
+
+const RDA_FOOD = [
+  {food_Code:"D065003", food_Name:"김치찌개(돼지고기)"},
+  {food_Code:"D999001", food_Name:"사과"},
+  {food_Code:"D999002", food_Name:"우유"},
+  {food_Code:"D999003", food_Name:"흰쌀밥"},
+  {food_Code:"D999004", food_Name:"닭가슴살구이"},
+  {food_Code:"D999005", food_Name:"그릭요거트"},
+  {food_Code:"D999006", food_Name:"귤"},
+  {food_Code:"D999007", food_Name:"계란찜"},
+];
+
+const RDA_FOOD_INGREDIENT = {
+  D065003: [
+    {ingredient_name:"김치", food_weight:60},
+    {ingredient_name:"돼지고기(사태)", food_weight:30},
+    {ingredient_name:"두부", food_weight:30},
+    {ingredient_name:"양파", food_weight:20},
+    {ingredient_name:"마늘", food_weight:2},
+    {ingredient_name:"고춧가루", food_weight:1},
+    {ingredient_name:"소금", food_weight:1},
+    {ingredient_name:"참기름", food_weight:1},
+    {ingredient_name:"쪽파", food_weight:1},
+  ],
+  D999001: [{ingredient_name:"사과", food_weight:100}],
+  D999002: [{ingredient_name:"우유", food_weight:200}],
+  D999003: [{ingredient_name:"쌀밥", food_weight:210}],
+  D999004: [{ingredient_name:"닭가슴살", food_weight:100}],
+  D999005: [{ingredient_name:"그릭요거트", food_weight:100}],
+  D999006: [{ingredient_name:"귤", food_weight:100}],
+  D999007: [{ingredient_name:"달걀", food_weight:60},{ingredient_name:"소금", food_weight:0.5}],
+};
+
+// INGREDIENT_MAPPING : 내부 데이터 처리 전용 테이블 (최종 사용자 화면에는 노출하지 않음)
+//
+// 우선순위 원칙:
+// 1) 특정 식품 전용 공식 기준값이 있으면 그것을 쓴다 (status: CONFIRMED, type: DIRECT/ALIAS)
+// 2) 전용 기준값은 없지만 식품군(예: 이건 육류다/채소다) 자체는 명백한 경우,
+//    같은 식품군의 공식 대표식품들이 공통으로 쓰는 1회 분량(표준값)을 적용한다
+//    (status: CONFIRMED, type: GROUP_DEFAULT). 이건 "모른다"가 아니라
+//    "그 식품 전용 자료는 없지만, 식품군 표준 분량으로 계산 가능하다"는 뜻이다.
+// 3) 조미료/소금/조리유/고명처럼 식사구성안이 애초에 식품군 섭취 횟수에 포함시키지 않는
+//    항목은 CONFIRMED 상태로 분류하되(분류 자체는 확실함), 식품군 serving 계산에서는 제외한다.
+//    조리유(COOKING_OIL)만 예외적으로 유지·당류군 표준 분량으로 환산해 반영한다.
+// 4) 식품군조차 판단할 근거가 없는 극히 예외적인 경우에만 REVIEW_NEEDED로 남기고,
+//    이때도 해당 재료 하나만 계산에서 빠질 뿐 나머지 재료·전체 음식 계산은 그대로 진행된다.
+const INGREDIENT_MAPPING = {
+  "김치":            {std:"SF06", role:"SIDE_FOOD", type:"ALIAS",  status:"CONFIRMED", note:"배추김치 공식 기준값 적용"},
+  "돼지고기":         {std:"SF_DEFAULT_MEAT", role:"MAIN_FOOD", type:"GROUP_DEFAULT", status:"CONFIRMED", note:"돼지고기 전용 공식 기준값은 없어 고기·생선·달걀·콩류군 표준 1회 분량(60g) 적용"},
+  "두부":            {std:"SF03", role:"SIDE_FOOD", type:"DIRECT", status:"CONFIRMED", note:"두부 공식 기준값 직접 매칭"},
+  "양파":            {std:"SF_DEFAULT_VEG", role:"SIDE_FOOD", type:"GROUP_DEFAULT", status:"CONFIRMED", note:"양파 전용 공식 기준값은 없어 채소류군 표준 1회 분량(70g) 적용"},
+  "마늘":            {std:null,  role:"SEASONING", type:"POLICY", status:"CONFIRMED", note:"조미료로 분류 · 식품군 serving 계산에서는 제외(영양소 계산에는 포함)"},
+  "고춧가루":         {std:null,  role:"SEASONING", type:"POLICY", status:"CONFIRMED", note:"조미료로 분류 · 식품군 serving 계산에서는 제외(영양소 계산에는 포함)"},
+  "소금":            {std:null,  role:"SALT", type:"POLICY", status:"CONFIRMED", note:"나트륨 등 영양소 계산에만 반영, 식품군 serving 제외"},
+  "참기름":          {std:"SF12", role:"COOKING_OIL", type:"GROUP_DEFAULT", status:"CONFIRMED", note:"조리유 · 유지·당류군 표준 1회 분량(5g)으로 환산"},
+  "쪽파":            {std:null,  role:"GARNISH", type:"POLICY", status:"CONFIRMED", note:"고명 · 식품군 serving 계산에서는 제외(영양소 계산에는 포함)"},
+  "파":              {std:null,  role:"GARNISH", type:"POLICY", status:"CONFIRMED", note:"고명(대파/쪽파 등) · 식품군 serving 계산에서는 제외(영양소 계산에는 포함)"},
+  "사과":            {std:"SF07", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"사과 공식 기준값 직접 매칭"},
+  "우유":            {std:"SF09", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"우유 공식 기준값 직접 매칭"},
+  "쌀밥":            {std:"SF01", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"쌀밥 공식 기준값 직접 매칭"},
+  "닭가슴살":         {std:"SF05", role:"MAIN_FOOD", type:"ALIAS", status:"CONFIRMED", note:"닭고기 공식 기준값 적용"},
+  "그릭요거트":       {std:"SF10", role:"MAIN_FOOD", type:"ALIAS", status:"CONFIRMED", note:"호상요구르트 기준값 적용 (그릭요거트 전용 기준 확인되면 교체 예정)"},
+  "귤":              {std:"SF08", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"귤 공식 기준값 직접 매칭"},
+  "달걀":            {std:"SF04", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"달걀 공식 기준값 직접 매칭"},
+  "시금치":          {std:"SF11", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"시금치 공식 기준값 직접 매칭"},
+  // 이번에 새로 추가: 감자밥 검색 결과에서 확인된 "감자", "멥쌀" 등 매핑
+  "감자":            {std:"SF_DEFAULT_VEG", role:"MAIN_FOOD", type:"GROUP_DEFAULT", status:"CONFIRMED", note:"감자 전용 공식 기준값은 없어 채소류군 표준 1회 분량(70g) 적용"},
+  "멥쌀":            {std:"SF01", role:"MAIN_FOOD", type:"ALIAS", status:"CONFIRMED", note:"쌀밥(조리된 상태) 공식 기준값 적용"},
+  "쌀":              {std:"SF01", role:"MAIN_FOOD", type:"ALIAS", status:"CONFIRMED", note:"쌀밥 공식 기준값 적용(조리 상태로 가정)"},
+  "백미":            {std:"SF13", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"백미(생쌀) 공식 기준값 적용"},
+  "현미":            {std:"SF13", role:"MAIN_FOOD", type:"ALIAS", status:"CONFIRMED", note:"백미 기준값 적용(현미 전용 기준 확인되면 교체 예정)"},
+  "국수":            {std:"SF14", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"마른 국수 공식 기준값 적용"},
+  "냉면":            {std:"SF14", role:"MAIN_FOOD", type:"ALIAS", status:"CONFIRMED", note:"냉면국수 공식 기준값 적용"},
+  "가래떡":          {std:"SF15", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"가래떡 공식 기준값 직접 매칭"},
+  "빵":              {std:"SF16", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"빵 공식 기준값 직접 매칭"},
+  "고등어":          {std:"SF17", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"고등어 공식 기준값 직접 매칭"},
+  "대두":            {std:"SF18", role:"SIDE_FOOD", type:"DIRECT", status:"CONFIRMED", note:"대두 공식 기준값 직접 매칭"},
+  "콩나물":          {std:"SF19", role:"SIDE_FOOD", type:"DIRECT", status:"CONFIRMED", note:"콩나물 공식 기준값 직접 매칭"},
+  "오이소박이":       {std:"SF20", role:"SIDE_FOOD", type:"DIRECT", status:"CONFIRMED", note:"오이소박이 공식 기준값 직접 매칭"},
+  "오이":            {std:"SF_DEFAULT_VEG", role:"SIDE_FOOD", type:"GROUP_DEFAULT", status:"CONFIRMED", note:"오이 전용 공식 기준값은 없어 채소류군 표준 1회 분량(70g) 적용"},
+  "느타리버섯":       {std:"SF21", role:"SIDE_FOOD", type:"DIRECT", status:"CONFIRMED", note:"느타리버섯 공식 기준값 직접 매칭"},
+  "버섯":            {std:"SF_DEFAULT_VEG", role:"SIDE_FOOD", type:"GROUP_DEFAULT", status:"CONFIRMED", note:"해당 버섯 전용 공식 기준값은 없어 채소류군 표준 1회 분량(70g) 적용"},
+  "미역":            {std:"SF22", role:"SIDE_FOOD", type:"DIRECT", status:"CONFIRMED", note:"미역 공식 기준값 직접 매칭"},
+  "참외":            {std:"SF23", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"참외 공식 기준값 직접 매칭"},
+  "포도":            {std:"SF24", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"포도 공식 기준값 직접 매칭"},
+  "수박":            {std:"SF25", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"수박 공식 기준값 직접 매칭"},
+  "대추":            {std:"SF26", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"대추 공식 기준값 직접 매칭"},
+  "치즈":            {std:"SF27", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"치즈 공식 기준값 직접 매칭"},
+  "액상요구르트":     {std:"SF28", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"액상요구르트 공식 기준값 직접 매칭"},
+  "셔벗":            {std:"SF29", role:"MAIN_FOOD", type:"DIRECT", status:"CONFIRMED", note:"셔벗 공식 기준값 직접 매칭"},
+  "버터":            {std:"SF30", role:"FAT_SUGAR", type:"DIRECT", status:"CONFIRMED", note:"유지·당류군 공식 기준값 직접 매칭"},
+  "참깨":            {std:"SF31", role:"FAT_SUGAR", type:"DIRECT", status:"CONFIRMED", note:"유지·당류군 공식 기준값 직접 매칭"},
+  "커피믹스":         {std:"SF32", role:"FAT_SUGAR", type:"DIRECT", status:"CONFIRMED", note:"유지·당류군 공식 기준값 직접 매칭"},
+  "설탕":            {std:"SF33", role:"FAT_SUGAR", type:"DIRECT", status:"CONFIRMED", note:"유지·당류군 공식 기준값 직접 매칭"},
+  "꿀":              {std:"SF34", role:"FAT_SUGAR", type:"DIRECT", status:"CONFIRMED", note:"유지·당류군 공식 기준값 직접 매칭"},
+};
+
+// 쇼핑 예시 상품 (프로토타입 예시, 실제 판매처/URL 미확인)
+const SHOP_PRODUCTS = [
+  {id:"SP01", name:"예산 사과 5kg", region:"충남 예산", price:800, emoji:"🍎"},
+  {id:"SP02", name:"괴산 절임배추", region:"충북 괴산", price:600, emoji:"🥬"},
+  {id:"SP03", name:"홍천 찰옥수수", region:"강원 홍천", price:500, emoji:"🌽"},
+  {id:"SP04", name:"제주 감귤 3kg", region:"제주", price:700, emoji:"🍊"},
+];
+
+/* =========================================================
+   3. 미션 정의 (RDA 기반 데이터로 실제 판정 가능한 것만 구현)
+   ========================================================= */
+const MISSION_POOL = [
+  {id:"M101", level:1, pt:10, emoji:"🍎", title:"과일 한 번 먹기", cond:{type:"GROUP_MIN", group:"과일류", min:0.01}},
+  {id:"M102", level:1, pt:10, emoji:"🥬", title:"채소 한 번 먹기", cond:{type:"GROUP_MIN", group:"채소류", min:0.01}},
+  {id:"M103", level:1, pt:10, emoji:"🥛", title:"유제품 챙기기", cond:{type:"GROUP_MIN", group:"우유·유제품류", min:0.01}},
+  {id:"M104", level:1, pt:10, emoji:"🥩", title:"단백질 식품 먹기", cond:{type:"GROUP_MIN", group:"고기·생선·달걀·콩류", min:0.01}},
+  {id:"M105", level:1, pt:10, emoji:"🍚", title:"곡류 먹기", cond:{type:"GROUP_MIN", group:"곡류", min:0.01}},
+
+  {id:"M201", level:2, pt:15, emoji:"🥬", title:"채소 2회 섭취하기", cond:{type:"GROUP_MIN", group:"채소류", min:2}},
+  {id:"M202", level:2, pt:15, emoji:"🍎", title:"과일 2회 섭취하기", cond:{type:"GROUP_MIN", group:"과일류", min:2}},
+  {id:"M203", level:2, pt:15, emoji:"🥩", title:"단백질 식품 2회 챙기기", cond:{type:"GROUP_MIN", group:"고기·생선·달걀·콩류", min:2}},
+  {id:"M204", level:2, pt:15, emoji:"🍚", title:"곡류 2회 먹기", cond:{type:"GROUP_MIN", group:"곡류", min:2}},
+  {id:"M205", level:2, pt:15, emoji:"🥛", title:"유제품 2회 챙기기", cond:{type:"GROUP_MIN", group:"우유·유제품류", min:2}},
+
+  {id:"M301", level:3, pt:20, emoji:"🍽️", title:"한 끼에 곡류+단백질+채소 구성하기", cond:{type:"MEAL_COMBO", groups:["곡류","고기·생선·달걀·콩류","채소류"]}},
+  {id:"M302", level:3, pt:20, emoji:"🍎", title:"과일+유제품 함께 챙기기", cond:{type:"DAY_COMBO", groups:["과일류","우유·유제품류"], minDistinct:2}},
+  {id:"M303", level:3, pt:20, emoji:"🥗", title:"하루 식사에서 3개 이상 식품군 구성하기", cond:{type:"DAY_COMBO", groups:CORE_GROUPS, minDistinct:3}},
+
+  {id:"M401", level:4, pt:25, emoji:"🏆", title:"한 끼 균형식 구성하기", cond:{type:"MEAL_COMBO", groups:CORE_GROUPS}},
+  {id:"M402", level:4, pt:25, emoji:"🌈", title:"하루 식품군을 고르게 구성하기", cond:{type:"DAY_COMBO", groups:CORE_GROUPS, minDistinct:5}},
+  {id:"M403", level:4, pt:25, emoji:"📅", title:"여러 끼에 걸쳐 식품군 구성하기", cond:{type:"MULTI_MEAL_COMBO", minGroupsPerMeal:3, minMeals:2}},
+];
+const LEVEL_DESC = {1:"건강한 식품 선택 시작하기", 2:"건강한 선택 늘리기", 3:"식품군 조합 만들기", 4:"균형 잡힌 식사 완성하기"};
+
+/* =========================================================
+   4. 상태 및 저장
+   ========================================================= */
+let profile = null;
+let mealRecords = [];
+let pointHistory = [];       // {type,date,amount,description,reference_id}
+let missionProgress = {};    // {missionId:{everDone,doneCount,lastDoneDate}}
+let dailyMissionsMap = {};   // {date:[missionId,...]}
+let attendanceDates = [];
+let fiveDayClaimedStart = null; // 마지막으로 보상 지급된 5일 챌린지 시작일 (중복지급 방지)
+let shopOrders = [];
+
+const todayStr = () => new Date().toISOString().slice(0,10);
+function shiftDate(dateStr, days){ const d=new Date(dateStr); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+
+// 실제 브라우저에는 window.storage가 존재하지 않으므로(그건 Claude 아티팩트 전용 API였음),
+// 표준 localStorage로 상태를 저장한다. 키는 "cashmeal:"로 네임스페이스를 둔다.
+const LS_PREFIX = "cashmeal:";
+function lsGet(key, def){
+  try{
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    return raw !== null ? JSON.parse(raw) : def;
+  }catch(e){
+    console.error("localStorage 읽기 실패:", key, e);
+    return def;
+  }
+}
+function lsSet(key, value){
+  try{
+    localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
+  }catch(e){
+    console.error("localStorage 저장 실패:", key, e);
+  }
+}
+
+async function loadState(){
+  profile = lsGet("profile", null);
+  mealRecords = lsGet("mealRecords", []);
+  pointHistory = lsGet("pointHistory", []);
+  missionProgress = lsGet("missionProgress", {});
+  dailyMissionsMap = lsGet("dailyMissionsMap", {});
+  attendanceDates = lsGet("attendanceDates", []);
+  fiveDayClaimedStart = lsGet("fiveDayClaimedStart", null);
+  shopOrders = lsGet("shopOrders", []);
+}
+async function saveState(){
+  lsSet("profile", profile);
+  lsSet("mealRecords", mealRecords);
+  lsSet("pointHistory", pointHistory);
+  lsSet("missionProgress", missionProgress);
+  lsSet("dailyMissionsMap", dailyMissionsMap);
+  lsSet("attendanceDates", attendanceDates);
+  lsSet("fiveDayClaimedStart", fiveDayClaimedStart);
+  lsSet("shopOrders", shopOrders);
+}
+
+function currentPoints(){ return pointHistory.reduce((s,p)=>s+p.amount, 0); }
+
+// 포인트 지급 (보상성 - 중복 방지)
+function awardPoint(type, date, amount, desc, referenceId){
+  const dup = pointHistory.some(p => p.type===type && p.date===date && p.reference_id===referenceId);
+  if(dup) return false;
+  pointHistory.push({type, date, amount, description:desc, reference_id:referenceId});
+  return true;
+}
+// 포인트 사용 (쇼핑 - 중복 방지 없음, 매번 신규 기록)
+function spendPoint(amount, desc, referenceId){
+  if(currentPoints() < amount) return false;
+  pointHistory.push({type:"SHOPPING_USE", date: todayStr(), amount:-amount, description:desc, reference_id:referenceId});
+  return true;
+}
+
+/* =========================================================
+   5. serving 계산 (기획서 [23]항)
+   ========================================================= */
+// 실제 RDA API가 돌려주는 재료명은 "재료, 품종/상태" 형태로 상세하게 붙어서 온다.
+// 예: "김치, 배추 김치" / "돼지고기, 사태, 삶은것" / "파, 쪽파, 생것"
+// 사전은 사람이 읽기 쉬운 "기본 이름" 기준으로 관리하므로, 쉼표 앞부분을 기준으로 먼저 찾고
+// 못 찾으면 원문 그대로도 한 번 더 찾는다. 이건 매핑 판단을 새로 만드는 게 아니라
+// 같은 재료를 가리키는 다른 표기를 정규화하는 것뿐이다(식품군 분류 자체는 그대로 둠).
+function baseIngredientName(name){
+  if(!name) return name;
+  return String(name).split(',')[0].trim();
+}
+function mapIngredient(name){
+  const base = baseIngredientName(name);
+  return INGREDIENT_MAPPING[base] || INGREDIENT_MAPPING[name] || {std:null, role:"REVIEW_NEEDED", type:"UNMAPPED", status:"REVIEW_NEEDED", note:`"${base}" 매핑 자료 없음 · 검토 대기로 남김`};
+}
+function calculateServing(actualWeight, refWeight, refServ){
+  if(!refWeight) return 0;
+  return (actualWeight/refWeight) * refServ;
+}
+function servingsForRecord(record){
+  const result = {};
+  record.ingredients.forEach(ing => {
+    const m = ing.mapping;
+    // std(표준식품)가 지정된 재료만 식품군 serving에 반영한다.
+    // 조미료/소금/고명처럼 애초에 식품군 serving에 포함시키지 않기로 한 재료는 std가 null이라 자동으로 제외되고,
+    // 조리유처럼 유지·당류군으로 환산하기로 한 재료는 std가 지정돼 있어 자동으로 포함된다.
+    if(!m.std) return;
+    const stdFood = STANDARD_FOOD.find(s=>s.id===m.std);
+    if(!stdFood) return;
+    const actualWeight = ing.weight * record.consumption_ratio;
+    const serv = calculateServing(actualWeight, stdFood.ref_w, stdFood.ref_serv);
+    result[stdFood.group] = (result[stdFood.group]||0) + serv;
+  });
+  return result;
+}
+const ALL_TRACKED_GROUPS = [...CORE_GROUPS, "유지·당류"];
+function dailyGroupTotals(date){
+  const totals = {}; ALL_TRACKED_GROUPS.forEach(g=>totals[g]=0);
+  mealRecords.filter(r=>r.date===date).forEach(r=>{
+    const s = servingsForRecord(r);
+    Object.keys(s).forEach(g=>{ totals[g]=(totals[g]||0)+s[g]; });
+  });
+  return totals;
+}
+function mealTypeGroupSet(date, mealType){
+  const set = new Set();
+  mealRecords.filter(r=>r.date===date && r.meal_type===mealType).forEach(r=>{
+    const s = servingsForRecord(r);
+    Object.keys(s).forEach(g=>{ if(s[g]>0) set.add(g); });
+  });
+  return set;
+}
+
+/* =========================================================
+   6. 완성 미션
+   ========================================================= */
+function calculateFinalMissionProgress(date){
+  const targets = MEAL_PATTERNS[profile.meal_pattern_id];
+  const totals = dailyGroupTotals(date);
+  const rows = CORE_GROUPS.map(g=>{
+    const actual = totals[g]||0;
+    const target = targets[g];
+    return {group:g, actual, target, progress:Math.min(actual/target,1), ok:actual>=target};
+  });
+  const overallAvg = rows.reduce((s,r)=>s+r.progress,0)/rows.length;
+  // 유지·당류는 참고용으로만 표시한다. 5개 핵심 식품군 완성 판정에는 포함되지 않는다(기획 원칙 유지).
+  const fatSugar = { group:"유지·당류", actual: totals["유지·당류"]||0, target: targets["유지·당류"] };
+  return {rows, overallAvg, fatSugar};
+}
+function checkFinalMission(date){
+  return calculateFinalMissionProgress(date).rows.every(r=>r.ok);
+}
+
+/* =========================================================
+   7. 미션 판정 / 레벨 해금 / 일일 미션 선정
+   ========================================================= */
+function checkMissionCondition(mission, date){
+  const totals = dailyGroupTotals(date);
+  const mealTypes = ["breakfast","lunch","dinner","snack"];
+  switch(mission.cond.type){
+    case "GROUP_MIN": return (totals[mission.cond.group]||0) >= mission.cond.min;
+    case "MEAL_COMBO": return mealTypes.some(mt => mission.cond.groups.every(g => mealTypeGroupSet(date,mt).has(g)));
+    case "DAY_COMBO": {
+      const present = mission.cond.groups.filter(g => (totals[g]||0) > 0);
+      return present.length >= mission.cond.minDistinct;
+    }
+    case "MULTI_MEAL_COMBO": {
+      const qualifying = mealTypes.filter(mt => mealTypeGroupSet(date,mt).size >= mission.cond.minGroupsPerMeal);
+      return qualifying.length >= mission.cond.minMeals;
+    }
+  }
+  return false;
+}
+
+function pickDailyMissions(pool, date){
+  const yesterday = shiftDate(date,-1);
+  const weighted = pool.map(m=>{
+    const prog = missionProgress[m.id] || {everDone:false,lastDoneDate:null};
+    let w = prog.everDone ? 1 : 3;
+    if(prog.lastDoneDate === yesterday) w *= 0.5;
+    return {m,w};
+  });
+  const arr=[...weighted]; const picked=[];
+  for(let i=0;i<3 && arr.length>0;i++){
+    const total = arr.reduce((s,x)=>s+x.w,0);
+    let r = Math.random()*total, idx=0;
+    for(;idx<arr.length-1;idx++){ r-=arr[idx].w; if(r<=0) break; }
+    picked.push(arr[idx].m);
+    arr.splice(idx,1);
+  }
+  return picked.map(m=>m.id);
+}
+function ensureDailyMissions(date){
+  if(dailyMissionsMap[date]) return dailyMissionsMap[date];
+  const pool = MISSION_POOL.filter(m=>m.level<=profile.current_mission_level);
+  dailyMissionsMap[date] = pickDailyMissions(pool, date);
+  return dailyMissionsMap[date];
+}
+
+function evaluateMissionsAndUnlock(date){
+  const ids = ensureDailyMissions(date);
+  ids.forEach(id=>{
+    const mission = MISSION_POOL.find(m=>m.id===id);
+    if(checkMissionCondition(mission, date)){
+      const awarded = awardPoint("BASIC_MISSION", date, mission.pt, mission.title, id);
+      if(awarded){
+        const prog = missionProgress[id] || {everDone:false, doneCount:0, lastDoneDate:null};
+        prog.everDone = true; prog.doneCount = (prog.doneCount||0)+1; prog.lastDoneDate = date;
+        missionProgress[id] = prog;
+      }
+    }
+  });
+  // 레벨 해금: 현재 레벨 풀 전체를 각각 한 번 이상 수행했는지 누적 기준으로 확인
+  let leveled = true;
+  while(leveled && profile.current_mission_level < 4){
+    const poolAtLevel = MISSION_POOL.filter(m=>m.level===profile.current_mission_level);
+    const allDone = poolAtLevel.every(m => missionProgress[m.id]?.everDone);
+    if(allDone){ profile.current_mission_level++; } else leveled=false;
+  }
+  // 완성 미션
+  if(checkFinalMission(date)) awardPoint("FINAL_MISSION", date, 100, "오늘의 완성 미션", "FINAL");
+}
+
+/* =========================================================
+   8. 식사 기록 스트릭 / 5일 챌린지 / 출석
+   ========================================================= */
+function calcMealStreak(){
+  let streak=0; let d = new Date();
+  if(!mealRecords.some(r=>r.date===d.toISOString().slice(0,10))) d.setDate(d.getDate()-1);
+  while(mealRecords.some(r=>r.date===d.toISOString().slice(0,10))){ streak++; d.setDate(d.getDate()-1); }
+  return streak;
+}
+function recordedDatesDesc(n){
+  const days=[]; for(let i=0;i<n;i++){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  return days;
+}
+function evaluateFiveDayChallenge(){
+  const last5 = recordedDatesDesc(5).reverse(); // 오래된->최신
+  const allRecorded = last5.every(d => mealRecords.some(r=>r.date===d));
+  const currentDays = Math.min(calcMealStreak(), 5);
+  if(!allRecorded){
+    return {currentDays, ready:false, success:false, startDate:last5[0]};
+  }
+  const sums = {}; CORE_GROUPS.forEach(g=>sums[g]=0);
+  last5.forEach(d=>{
+    const totals = dailyGroupTotals(d);
+    CORE_GROUPS.forEach(g=>sums[g]+=totals[g]||0);
+  });
+  const targets = MEAL_PATTERNS[profile.meal_pattern_id];
+  const success = CORE_GROUPS.every(g => (sums[g]/5) >= targets[g]);
+  return {currentDays:5, ready:true, success, startDate:last5[0]};
+}
+function checkAttendance(){
+  const t = todayStr();
+  if(!attendanceDates.includes(t)){
+    attendanceDates.push(t);
+    awardPoint("ATTENDANCE", t, 3, "오늘 출석", t);
+  }
+}
+
+/* =========================================================
+   9. 검색/재료 조회
+   - 프론트엔드는 RDA API를 직접 호출하지 않고, 반드시 우리 서버(/api/foods)만 호출한다.
+   - 실패 시 mock 데이터로 조용히 대체하지 않는다. "결과 없음"과 "서버/API 오류"를 구분해서
+     그대로 사용자에게 알린다.
+   ========================================================= */
+async function searchFood(query){
+  let res;
+  try{
+    res = await fetch(`/api/foods?name=${encodeURIComponent(query)}`);
+  }catch(networkErr){
+    return {ok:false, reason:"network", items:[]};
+  }
+  if(!res.ok){
+    let detail = null;
+    try{ detail = await res.json(); }catch(e){}
+    return {ok:false, reason:"server", detail, items:[]};
+  }
+  const data = await res.json();
+  return {ok:true, items: data.items || []};
+}
+async function getIngredients(food_Code){
+  let res;
+  try{
+    res = await fetch(`/api/foods/${encodeURIComponent(food_Code)}`);
+  }catch(networkErr){
+    return {ok:false, reason:"network", items:[]};
+  }
+  if(!res.ok){
+    let detail = null;
+    try{ detail = await res.json(); }catch(e){}
+    return {ok:false, reason:"server", detail, items:[]};
+  }
+  const data = await res.json();
+  return {
+    ok:true,
+    items: (data.items || []).map(it=>({ingredient_name: it.ingredient_name, food_weight: it.food_weight, nutrients: it.nutrients}))
+  };
+}
+
+/* =========================================================
+   10. 렌더링
+   ========================================================= */
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2000);
+}
+
+function renderTopbar(){
+  document.getElementById("mealStreakNum").textContent = calcMealStreak();
+  document.getElementById("pointNum").textContent = currentPoints();
+}
+
+function renderHome(){
+  const date = todayStr();
+  document.getElementById("p_name").textContent = `${profile.name}님`;
+  document.getElementById("p_meta").textContent = `${profile.sex==="male"?"남성":"여성"} · ${profile.age}세 · ${ACTIVITY_LABEL[profile.activity_level]}`;
+  document.getElementById("p_kcal").textContent = `${profile.kdri_energy} kcal · ${profile.meal_pattern_id}B ${profile.kdri_energy_is_official?"(공식 KDRI 최종값)":"(앱 추정치)"}`;
+
+  document.getElementById("attendLine").style.opacity = attendanceDates.includes(date) ? 1 : 0.4;
+
+  const idsToday = ensureDailyMissions(date);
+  document.getElementById("homeLevelTag").textContent = `Lv.${profile.current_mission_level}`;
+  const missionsToday = idsToday.map(id=>MISSION_POOL.find(m=>m.id===id));
+  const wrap1 = document.getElementById("dailyMissionCard");
+  const wrap2 = document.getElementById("dailyMissionCard2");
+  const html = missionsToday.map(m=>{
+    const done = checkMissionCondition(m, date);
+    return `<div class="mission-row ${done?'done':''}">
+      <div class="check ${done?'on':''}">${done?'✓':''}</div>
+      <div class="mission-emoji">${m.emoji}</div>
+      <div class="mission-body"><div class="mission-name">${m.title}</div><div class="mission-sub">${done?'오늘 성공!':'실제로 기록하면 성공 처리돼요'}</div></div>
+      <div class="mission-pt">+${m.pt}P</div>
+    </div>`;
+  }).join("");
+  wrap1.innerHTML = html; wrap2.innerHTML = html;
+  const doneCount = missionsToday.filter(m=>checkMissionCondition(m,date)).length;
+  document.getElementById("dailyMissionProgress").textContent = `${doneCount} / 3 완료`;
+
+  const {rows, overallAvg, fatSugar} = calculateFinalMissionProgress(date);
+  const finalOk = checkFinalMission(date);
+  document.getElementById("finalPct").textContent = `${Math.round(overallAvg*100)}%${finalOk?' · 완성! 🎉':''}`;
+  document.getElementById("finalPatternLabel").textContent = `${profile.meal_pattern_id}B 패턴 기준 · 5개 핵심 식품군을 모두 목표치 이상 채우면 완성이에요`;
+  const fatSugarLineHome = fatSugar.target ? `
+    <div class="group-line" style="opacity:0.7;">
+      <div class="g-icon">🧈</div>
+      <div class="g-name">유지·당류</div>
+      <div class="g-bar"><span style="width:${Math.round(Math.min(fatSugar.actual/fatSugar.target,1)*100)}%"></span></div>
+      <div class="g-val">${fatSugar.actual.toFixed(1)} / ${fatSugar.target}</div>
+    </div>` : "";
+  document.getElementById("groupDetailHome").innerHTML = rows.map(r=>`
+    <div class="group-line ${r.ok?'ok':''}">
+      <div class="g-icon">${GROUP_ICON[r.group]}</div>
+      <div class="g-name">${r.group}</div>
+      <div class="g-bar"><span style="width:${Math.round(r.progress*100)}%"></span></div>
+      <div class="g-val">${r.actual.toFixed(1)} / ${r.target}</div>
+    </div>`).join("") + fatSugarLineHome + `<div class="sub" style="color:rgba(255,255,255,0.6); margin-top:4px;">유지·당류는 참고용이에요 (완성 판정에는 포함되지 않아요)</div>`;
+
+  const fc = evaluateFiveDayChallenge();
+  document.getElementById("challengeDots").innerHTML = [0,1,2,3,4].map(i=>`<div class="cdot ${i<fc.currentDays?'on':''}"></div>`).join("");
+  let ctext = `${fc.currentDays} / 5일 연속 기록 중 · 5일 평균 권장 식사구성을 달성하면 +300P (앱 자체 게임 규칙, KDRI 공식 기준 아님)`;
+  if(fc.ready){
+    if(fc.success){
+      const awarded = awardPoint("FIVE_DAY_CHALLENGE", date, 300, "5일 균형 식사 챌린지", fc.startDate);
+      ctext = awarded ? "5일 평균 목표 달성! +300P 지급 완료 🎉" : "이미 이번 챌린지 보상을 받았어요. 내일부터 새로운 5일이 시작돼요.";
+    } else {
+      ctext = "5일 기록은 채웠지만 평균 목표에는 아직 못 미쳤어요.";
+    }
+  }
+  document.getElementById("challengeText").textContent = ctext;
+  document.getElementById("challengeMiniCard").innerHTML = `<div class="sub" style="margin:0;">${ctext}</div>`;
+
+  const types=[["breakfast","아침"],["lunch","점심"],["dinner","저녁"],["snack","간식"]];
+  document.getElementById("homeMealMini").innerHTML = types.map(([k,l])=>{
+    const recs = mealRecords.filter(r=>r.date===date && r.meal_type===k);
+    return `<div class="mission-row"><div class="mission-body"><div class="mission-name">${l}</div><div class="mission-sub">${recs.length>0? recs.map(r=>r.food_name).join(", ") : "아직 기록 없음"}</div></div></div>`;
+  }).join("");
+
+  document.getElementById("finalMiniCard").innerHTML = `
+    <div class="sub" style="margin:0 0 8px;">${profile.meal_pattern_id}B 패턴 기준 · 현재 ${Math.round(overallAvg*100)}%</div>
+    ${rows.map(r=>`<div class="group-line" style="color:var(--text);"><div class="g-icon">${GROUP_ICON[r.group]}</div><div class="g-name" style="color:var(--muted);">${r.group}</div><div class="g-bar" style="background:var(--surface-2);"><span style="width:${Math.round(r.progress*100)}%; background:var(--green);"></span></div><div class="g-val" style="color:${r.ok?'var(--green)':'var(--muted)'};">${r.actual.toFixed(1)}/${r.target}</div></div>`).join("")}
+  `;
+}
+
+function renderMissionTab(){
+  document.getElementById("levelTitle").textContent = `Lv.${profile.current_mission_level} · ${LEVEL_DESC[profile.current_mission_level]}`;
+  const track = document.getElementById("levelTrack");
+  track.innerHTML = [1,2,3,4].map((lv,i)=>{
+    const state = lv < profile.current_mission_level ? "done" : (lv===profile.current_mission_level ? "current" : "locked");
+    const icon = state==="done" ? "✓" : (state==="locked" ? "🔒" : lv);
+    const line = lv<4 ? `<div class="level-line"></div>` : "";
+    return `<div class="level-node"><div class="level-badge ${state}">${icon}</div>${line}</div>`;
+  }).join("");
+
+  const poolAtLevel = MISSION_POOL.filter(m=>m.level===profile.current_mission_level);
+  const doneAtLevel = poolAtLevel.filter(m=>missionProgress[m.id]?.everDone).length;
+  document.getElementById("expLabel").textContent = `Lv.${profile.current_mission_level} 미션 경험도 · ${doneAtLevel} / ${poolAtLevel.length}`;
+  document.getElementById("expBar").style.width = `${Math.round(doneAtLevel/poolAtLevel.length*100)}%`;
+
+  const lockMsg = document.getElementById("lockMsg");
+  if(profile.current_mission_level < 4){
+    const remain = poolAtLevel.length - doneAtLevel;
+    lockMsg.style.display = "block";
+    lockMsg.textContent = remain>0
+      ? `Lv.${profile.current_mission_level} 미션을 각각 한 번씩 수행하면 Lv.${profile.current_mission_level+1}이 해금돼요 (${remain}개 더 남음)`
+      : "";
+  } else {
+    lockMsg.style.display = "none";
+  }
+}
+
+function renderRecord(){
+  const date = todayStr();
+  const wrap = document.getElementById("mealBlocks");
+  const types=[["breakfast","아침"],["lunch","점심"],["dinner","저녁"],["snack","간식"]];
+  wrap.innerHTML = types.map(([key,label])=>{
+    const recs = mealRecords.filter(r=>r.date===date && r.meal_type===key);
+    return `<div class="meal-block">
+      <div class="meal-head"><div class="meal-name">${label}</div><button class="addbtn" data-type="${key}" data-label="${label}">+ 식사 기록</button></div>
+      ${recs.map(r=>`<div class="food-item"><div><div class="fname">${r.food_name}</div><div class="fmeta">${r.consumption_ratio}인분 · 재료 ${r.ingredients.length}개</div></div></div>`).join("")}
+    </div>`;
+  }).join("");
+  wrap.querySelectorAll(".addbtn").forEach(btn=>btn.addEventListener("click", ()=>openModal(btn.dataset.type)));
+}
+
+function renderShop(){
+  const wrap = document.getElementById("shopList");
+  const pts = currentPoints();
+  wrap.innerHTML = SHOP_PRODUCTS.map(p=>`
+    <div class="shop-card">
+      <div class="shop-thumb">${p.emoji}</div>
+      <div class="shop-body">
+        <div class="shop-name">${p.name} <span class="badge mock">예시 상품</span></div>
+        <div class="shop-meta">${p.region}</div>
+        <div class="shop-price">${p.price}P</div>
+        <button class="buybtn" data-id="${p.id}" ${pts<p.price?'disabled':''}>구매하기</button>
+      </div>
+    </div>`).join("");
+  wrap.querySelectorAll(".buybtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const p = SHOP_PRODUCTS.find(x=>x.id===btn.dataset.id);
+      const ok = spendPoint(p.price, `${p.name} 구매`, `${p.id}_${Date.now()}`);
+      if(ok){
+        shopOrders.push({product_id:p.id, date:todayStr(), price:p.price});
+        toast(`${p.name} 구매 완료! (시뮬레이션)`);
+        saveState(); renderAll();
+      } else {
+        toast("포인트가 부족해요");
+      }
+    });
+  });
+}
+
+function renderReport(){
+  const days = recordedDatesDesc(7).reverse();
+  const dayNames=["일","월","화","수","목","금","토"];
+  const chart = document.getElementById("weekChart");
+  const weekly = days.map(date=>{
+    const has = mealRecords.some(r=>r.date===date);
+    if(!has) return {date, recorded:false};
+    const {overallAvg} = calculateFinalMissionProgress(date);
+    return {date, recorded:true, avg:overallAvg};
+  });
+  chart.innerHTML = weekly.map(d=>{
+    const dow = dayNames[new Date(d.date).getDay()];
+    if(!d.recorded) return `<div class="daybar"><div class="col"><div class="fill" style="height:0%"></div></div><div class="lbl" style="color:#C7D2BF;">${dow}</div></div>`;
+    return `<div class="daybar"><div class="col"><div class="fill" style="height:${Math.round(d.avg*100)}%"></div></div><div class="lbl">${dow}</div></div>`;
+  }).join("");
+  const recordedCount = weekly.filter(d=>d.recorded).length;
+  document.getElementById("weekAvgLine").textContent = `이번 주 ${recordedCount}일 기록됨 · 평균은 기록된 날만으로 계산돼요`;
+
+  const recordedDates = weekly.filter(d=>d.recorded).map(d=>d.date);
+  const groupSums = {}; CORE_GROUPS.forEach(g=>groupSums[g]=0);
+  recordedDates.forEach(date=>{
+    const totals = dailyGroupTotals(date);
+    CORE_GROUPS.forEach(g=>groupSums[g]+=totals[g]||0);
+  });
+  const targets = MEAL_PATTERNS[profile.meal_pattern_id];
+  document.getElementById("groupAvgTable").innerHTML = recordedDates.length===0
+    ? `<div class="sub" style="margin:0;">아직 기록된 날이 없어요.</div>`
+    : CORE_GROUPS.map(g=>{
+        const avg = groupSums[g]/recordedDates.length;
+        return `<div class="rep-row"><div>${GROUP_ICON[g]} ${g}</div><div>${avg.toFixed(1)} / ${targets[g]}</div></div>`;
+      }).join("");
+}
+
+function renderAll(){ renderTopbar(); renderHome(); renderMissionTab(); renderRecord(); renderShop(); renderReport(); }
+
+/* =========================================================
+   11. 온보딩
+   ========================================================= */
+let ob_sex=null, ob_activity=null;
+document.getElementById("ob_sex").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  document.getElementById("ob_sex").querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+  b.classList.add("sel"); ob_sex=b.dataset.v;
+}));
+document.getElementById("ob_activity").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  document.getElementById("ob_activity").querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+  b.classList.add("sel"); ob_activity=b.dataset.v;
+}));
+document.getElementById("ob_submit").addEventListener("click", async ()=>{
+  const name = document.getElementById("ob_name").value.trim() || "게스트";
+  const age = parseInt(document.getElementById("ob_age").value);
+  const height = parseFloat(document.getElementById("ob_height").value);
+  const weight = parseFloat(document.getElementById("ob_weight").value);
+  if(!ob_sex || !ob_activity || !age || !height || !weight){
+    toast("모든 항목을 입력해주세요"); return;
+  }
+  const officialKcal = getOfficialKcal(ob_sex, age, ob_activity);
+  const individualEER = calcIndividualEER(ob_sex, age, height, weight, ob_activity);
+  const kdriEnergy = officialKcal !== null ? officialKcal : Math.round(individualEER/100)*100;
+  const patternKey = nearestPatternKey(kdriEnergy);
+  const now = new Date().toISOString();
+  profile = {
+    name, sex:ob_sex, age, height, weight, activity_level:ob_activity,
+    kdri_energy: kdriEnergy, kdri_energy_is_official: officialKcal!==null,
+    individual_eer: Math.round(individualEER),
+    meal_pattern_id: patternKey, meal_pattern_is_exact: String(kdriEnergy)===patternKey,
+    current_mission_level: 1, created_at: now, updated_at: now
+  };
+  await saveState();
+  document.getElementById("onboardScreen").style.display="none";
+  document.getElementById("mainApp").style.display="flex";
+  checkAttendance();
+  evaluateMissionsAndUnlock(todayStr());
+  renderAll();
+  await saveState();
+});
+
+document.getElementById("profileCard").addEventListener("click", ()=>{
+  document.getElementById("ob_name").value = profile.name;
+  document.getElementById("ob_age").value = profile.age;
+  document.getElementById("ob_height").value = profile.height;
+  document.getElementById("ob_weight").value = profile.weight;
+  ob_sex = profile.sex; ob_activity = profile.activity_level;
+  document.getElementById("ob_sex").querySelectorAll("button").forEach(b=>b.classList.toggle("sel", b.dataset.v===ob_sex));
+  document.getElementById("ob_activity").querySelectorAll("button").forEach(b=>b.classList.toggle("sel", b.dataset.v===ob_activity));
+  document.getElementById("mainApp").style.display="none";
+  document.getElementById("onboardScreen").style.display="block";
+});
+
+/* =========================================================
+   12. 탭 전환 / 완성미션 상세 토글
+   ========================================================= */
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(`view-${btn.dataset.view}`).classList.add("active");
+  });
+});
+document.getElementById("toggleDetail").addEventListener("click", ()=>{
+  const el = document.getElementById("groupDetailHome");
+  const btn = document.getElementById("toggleDetail");
+  const show = el.style.display !== "block";
+  el.style.display = show ? "block" : "none";
+  btn.textContent = show ? "접기" : "자세히 보기";
+});
+
+/* =========================================================
+   13. 식사 기록 모달
+   ========================================================= */
+let currentMealType = "breakfast";
+let pendingFood = null;
+let currentIngredients = [];
+let currentRatio = 1;
+
+function openModal(type){
+  currentMealType = type || "breakfast";
+  document.getElementById("mealtypeRow").querySelectorAll("button").forEach(b=>b.classList.toggle("sel", b.dataset.t===currentMealType));
+  document.getElementById("modalStep1").style.display="block";
+  document.getElementById("modalStep2").style.display="none";
+  document.getElementById("searchInput").value="";
+  document.getElementById("searchResults").innerHTML="";
+  document.getElementById("modalBack").classList.add("open");
+}
+function closeModal(){ document.getElementById("modalBack").classList.remove("open"); }
+document.getElementById("cameraBtnHome").addEventListener("click", ()=>openModal("breakfast"));
+document.getElementById("cameraBtnRecord").addEventListener("click", ()=>openModal("breakfast"));
+document.getElementById("closeModal1").addEventListener("click", closeModal);
+document.getElementById("backToSearch").addEventListener("click", ()=>{
+  document.getElementById("modalStep1").style.display="block";
+  document.getElementById("modalStep2").style.display="none";
+});
+document.getElementById("mealtypeRow").querySelectorAll("button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    document.getElementById("mealtypeRow").querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+    b.classList.add("sel"); currentMealType = b.dataset.t;
+  });
+});
+
+document.getElementById("cameraTrigger").addEventListener("click", ()=>document.getElementById("cameraInput").click());
+document.getElementById("cameraInput").addEventListener("change", ()=>{
+  toast("사진 인식 중... (프로토타입)");
+  setTimeout(()=>{
+    const guess = RDA_FOOD[Math.floor(Math.random()*RDA_FOOD.length)];
+    document.getElementById("searchInput").value = guess.food_Name;
+    toast(`AI 추정: "${guess.food_Name}" (검색 결과에서 꼭 확인해주세요)`);
+    doSearch();
+  }, 900);
+});
+
+document.getElementById("searchBtn").addEventListener("click", doSearch);
+document.getElementById("searchInput").addEventListener("keydown", e=>{ if(e.key==="Enter") doSearch(); });
+
+async function doSearch(){
+  const q = document.getElementById("searchInput").value.trim();
+  if(!q) return;
+  const statusEl = document.getElementById("apiStatus");
+  const resultsEl = document.getElementById("searchResults");
+  statusEl.textContent = "서버에 검색을 요청하는 중...";
+  resultsEl.innerHTML = "";
+  const result = await searchFood(q);
+
+  if(!result.ok){
+    statusEl.textContent = result.reason==="network"
+      ? "⚠️ 서버에 연결할 수 없어요. server.js(npm start)가 실행 중인지 확인해주세요."
+      : `⚠️ 음식 데이터를 불러오지 못했습니다. (RDA API 오류${result.detail?.rdaError?.errMsg ? ' · ' + result.detail.rdaError.errMsg : ''})`;
+    resultsEl.innerHTML = `<div class="sub">검색 결과를 표시할 수 없어요. 잠시 후 다시 시도해주세요.</div>`;
+    return;
+  }
+  if(result.items.length===0){
+    statusEl.textContent = "✅ 서버 연결은 정상이에요. 다만 이 검색어로는 결과가 없어요.";
+    resultsEl.innerHTML = `<div class="sub">일치하는 음식이 없어요. 다른 검색어를 입력해보세요.</div>`;
+    return;
+  }
+  statusEl.textContent = "✅ 실제 RDA 공공데이터에서 검색 결과를 가져왔어요.";
+  resultsEl.innerHTML = result.items.map(it=>`
+    <div class="result-item" data-code="${it.food_Code}" data-name="${it.food_Name}">
+      <div><div class="rname">${it.food_Name} <span class="badge official">실시간 RDA 데이터</span></div><div class="rcode">${it.food_Code}${it.large_Name ? ' · ' + it.large_Name : ''}</div></div>
+      <div class="rarrow">선택 ›</div>
+    </div>`).join("");
+  resultsEl.querySelectorAll(".result-item").forEach(el=>el.addEventListener("click", ()=>selectFood(el.dataset.code, el.dataset.name)));
+}
+
+// 재료 상세 화면(총 재료 중량/영양 요약 + 재료별 목록)을 현재 인분 비율(currentRatio) 기준으로 렌더링
+// 일반 사용자에게는 재료명/중량/영양정보만 보여준다.
+// 내부 매핑 상태(REVIEW_NEEDED, serving 제외 등)는 화면 하단의 접힌 "디버그 정보"에서만 확인할 수 있다.
+function renderIngredientTable(){
+  const ratio = currentRatio;
+  const sum = (key) => currentIngredients.reduce((s,ing)=>{
+    const v = ing.nutrients ? ing.nutrients[key] : null;
+    return s + (v!=null ? Number(v) : 0);
+  }, 0) * ratio;
+  const totalWeight = currentIngredients.reduce((s,ing)=> s + (ing.weight||0), 0) * ratio;
+  const hasNutrients = currentIngredients.some(ing=>ing.nutrients);
+
+  const summaryHtml = `
+    <div class="card tight" style="margin-bottom:10px;">
+      <div style="font-size:13px; font-weight:700; margin-bottom:6px;">총 재료 중량 ${totalWeight.toFixed(1)}g <span class="sub" style="margin:0;">(${ratio}인분 기준)</span></div>
+      ${hasNutrients
+        ? `<div class="sub" style="margin:0;">에너지 ${sum('energy').toFixed(1)}kcal · 단백질 ${sum('protein').toFixed(1)}g · 지방 ${sum('fat').toFixed(1)}g · 탄수화물 ${sum('carbohydrate').toFixed(1)}g · 나트륨 ${sum('sodium').toFixed(1)}mg</div>`
+        : `<div class="sub" style="margin:0;">이 음식은 재료별 영양정보가 제공되지 않았어요.</div>`}
+    </div>`;
+
+  // 사용자에게 보이는 재료 목록: 이름과 중량만 (내부 매핑 상태는 노출하지 않음)
+  const rowsHtml = currentIngredients.map(ing=>{
+    const scaledWeight = (ing.weight||0) * ratio;
+    return `<div class="ing-row"><div class="iname">${ing.name}</div><div class="iserv">${scaledWeight.toFixed(1)}g</div></div>`;
+  }).join("");
+
+  // 개발자용 디버그 정보(기본 접힘): 재료별 식품군 매핑/serving 계산 근거를 그대로 보여준다.
+  const debugRows = currentIngredients.map(ing=>{
+    const stdFood = ing.mapping.std ? STANDARD_FOOD.find(s=>s.id===ing.mapping.std) : null;
+    const scaledWeight = (ing.weight||0) * ratio;
+    const servText = stdFood
+      ? `${calculateServing(scaledWeight, stdFood.ref_w, stdFood.ref_serv).toFixed(2)}회 (${stdFood.group})`
+      : "식품군 serving 미포함";
+    return `<div class="ing-row"><div><div class="iname">${ing.name} <span class="badge ${ing.mapping.status==='CONFIRMED'?'official':'review'}">${ing.mapping.status}</span></div><div class="irole">${ing.mapping.role} · ${ing.mapping.type} · ${ing.mapping.note}</div></div><div class="iserv">${servText}</div></div>`;
+  }).join("");
+  const debugHtml = `
+    <div style="margin-top:14px;">
+      <button type="button" id="ingDebugToggle" class="closebtn" style="padding:6px 0; font-size:11px; text-decoration:underline;">개발자용 디버그 정보 보기</button>
+      <div id="ingDebugPanel" style="display:none; margin-top:6px;">${debugRows}</div>
+    </div>`;
+
+  document.getElementById("ingTable").innerHTML = summaryHtml + rowsHtml + debugHtml;
+  const toggleBtn = document.getElementById("ingDebugToggle");
+  const panel = document.getElementById("ingDebugPanel");
+  if(toggleBtn){
+    toggleBtn.addEventListener("click", ()=>{
+      const show = panel.style.display === "none";
+      panel.style.display = show ? "block" : "none";
+      toggleBtn.textContent = show ? "개발자용 디버그 정보 접기" : "개발자용 디버그 정보 보기";
+    });
+  }
+}
+
+async function selectFood(code, name){
+  pendingFood = null;
+  currentIngredients = [];
+  document.getElementById("foodTitle").textContent = name;
+  document.getElementById("ingTable").innerHTML = `<div class="sub">재료·영양정보를 불러오는 중...</div>`;
+  document.getElementById("confirmAdd").disabled = true;
+  document.getElementById("modalStep1").style.display="none";
+  document.getElementById("modalStep2").style.display="block";
+
+  const result = await getIngredients(code);
+  if(!result.ok){
+    document.getElementById("ingTable").innerHTML = `<div class="sub">음식 데이터를 불러오지 못했습니다. ${result.reason==="network" ? "서버에 연결할 수 없어요." : "RDA API 응답 오류예요."} 다시 검색해보시거나 잠시 후 시도해주세요.</div>`;
+    return;
+  }
+  if(result.items.length===0){
+    document.getElementById("ingTable").innerHTML = `<div class="sub">이 음식의 재료 정보를 찾을 수 없어요.</div>`;
+    return;
+  }
+
+  currentIngredients = result.items.map(it=>({name:it.ingredient_name, weight:it.food_weight, mapping:mapIngredient(it.ingredient_name), nutrients: it.nutrients}));
+  pendingFood = {code, name};
+  currentRatio = 1;
+  document.getElementById("confirmAdd").disabled = false;
+  renderIngredientTable();
+
+  const ratioRow = document.getElementById("ratioRow");
+  ratioRow.innerHTML = [0.5,1,1.5].map(r=>`<button class="ratio-opt ${r===1?'sel':''}" data-r="${r}">${r}인분</button>`).join("") + `<button class="ratio-opt" data-r="custom">직접 입력</button>`;
+  ratioRow.querySelectorAll(".ratio-opt").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(btn.dataset.r==="custom"){
+        const v = prompt("몇 인분을 드셨나요? (예: 0.7)", "1");
+        if(v && !isNaN(parseFloat(v))) currentRatio = parseFloat(v); else return;
+      } else currentRatio = parseFloat(btn.dataset.r);
+      ratioRow.querySelectorAll(".ratio-opt").forEach(b=>b.classList.remove("sel"));
+      btn.classList.add("sel");
+      renderIngredientTable();
+    });
+  });
+}
+
+document.getElementById("confirmAdd").addEventListener("click", async ()=>{
+  if(!pendingFood || currentIngredients.length===0){
+    toast("음식 데이터를 먼저 불러와주세요.");
+    return;
+  }
+  mealRecords.push({
+    date: todayStr(), meal_type: currentMealType, food_code: pendingFood.code, food_name: pendingFood.name,
+    consumption_ratio: currentRatio, ingredients: currentIngredients.map(i=>({name:i.name, weight:i.weight, mapping:i.mapping, nutrients:i.nutrients}))
+  });
+  closeModal();
+  toast(`${pendingFood.name} 기록 완료!`);
+  evaluateMissionsAndUnlock(todayStr());
+  await saveState();
+  renderAll();
+});
+
+/* =========================================================
+   14. 초기화
+   ========================================================= */
+(async function init(){
+  await loadState();
+  if(!profile){
+    document.getElementById("onboardScreen").style.display="block";
+    document.getElementById("mainApp").style.display="none";
+    return;
+  }
+  document.getElementById("onboardScreen").style.display="none";
+  document.getElementById("mainApp").style.display="flex";
+  checkAttendance();
+  evaluateMissionsAndUnlock(todayStr());
+  renderAll();
+  await saveState();
+})();
+</script>
+</body>
+</html>
